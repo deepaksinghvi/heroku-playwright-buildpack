@@ -140,6 +140,9 @@ export_env_dir() {
 export_env_dir "$ENV_DIR" PLAYWRIGHT_BUILDPACK_BROWSERS
 install_system_deps
 
+topic "Installing Playwright Python package"
+pip install playwright
+
 topic "Installing Chromium browser binary for Playwright"
 $HOME/.local/bin/playwright install chromium
 
