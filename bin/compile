@@ -141,6 +141,9 @@ export_env_dir "$ENV_DIR" PLAYWRIGHT_BUILDPACK_BROWSERS
 install_system_deps
 
 topic "Installing Chromium browser binary for Playwright"
-python -m playwright install chromium
+pushd $BUILD_DIR
+$BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
+popd
+
 
 configure_export_env
