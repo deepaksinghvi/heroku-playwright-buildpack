@@ -142,7 +142,7 @@ install_system_deps
 
 (
   cd $BUILD_DIR
-  $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
+  PLAYWRIGHT_BROWSERS_PATH="$BUILD_DIR/.local-browsers" $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
 )
 
 
