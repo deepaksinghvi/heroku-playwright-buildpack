@@ -138,7 +138,7 @@ export_env_dir() {
 }
 
 install_chromium() {
-    topic "Installing Chromium browser binary for Playwright"
+    topic "Installing Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
     (
         cd $BUILD_DIR
         if [ -z "$PIP_TARGET" ]; then
