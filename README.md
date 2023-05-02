@@ -1,6 +1,8 @@
 # Heroku Playwright Buildpack
 
-This buildpack installs all the needed dependencies to use Playwright with Chromium and Firefox on Heroku specifically for python. It adapts from original heroku playwright buildpack and adds instruction to install browser binaries for python
+This buildpack installs all the needed dependencies to use Playwright with Chromium and Firefox on Heroku specifically for python. 
+
+It extends the original heroku playwright buildpack and updated the buildpack to *install chrome browser binaries for python*
 
 ## Source buildpack
 
