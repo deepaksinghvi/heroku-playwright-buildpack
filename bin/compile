@@ -158,11 +158,19 @@ install_chromium() {
         wget -qO chromium-linux.zip "https://www.googleapis.com/download/storage/v1/b/chromium-browser-snapshots/o/Linux_x64%2F$CHROMIUM_VERSION%2Fchrome-linux.zip?alt=media"
         unzip chromium-linux.zip -d $PIP_TARGET
         
+        # Remove the original zip file to minimize slug size
+        rm -f chromium-linux.zip
+        
+        # Move and rename the directory to match the expected structure
+        mv $PIP_TARGET/chrome-linux $PIP_TARGET/chromium
+        
+        # Clean up unnecessary files to reduce slug size
+        find $PIP_TARGET/chromium -type f ! -name 'chrome' -delete
+        find $PIP_TARGET/chromium -type d -empty -delete
+        
         # Verify installation
-        if [ ! -d "$PIP_TARGET/chrome-linux" ]; then
+        if [ ! -f "$PIP_TARGET/chromium/chrome" ]; then
             error "Failed to install Chromium version $CHROMIUM_VERSION"
-        else
-            mv $PIP_TARGET/chrome-linux $PIP_TARGET/chromium
         fi
         
         # Debugging information
