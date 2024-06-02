@@ -8,29 +8,29 @@ ENV_DIR=$3
 BP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 error() {
-	echo " !     $*" >&2
-	exit 1
+    echo " !     $*" >&2
+    exit 1
 }
 
 topic() {
-	echo "-----> $*"
+    echo "-----> $*"
 }
 
 install_system_deps() {
-	topic "Installing System Dependencies"
+    topic "Installing System Dependencies"
 
-	APT_BUILDPACK="https://github.com/heroku/heroku-buildpack-apt"
-	local buildpack_tmpdir=$(mktemp -d)
-	cd $buildpack_tmpdir && git clone $APT_BUILDPACK .
+    APT_BUILDPACK="https://github.com/heroku/heroku-buildpack-apt"
+    local buildpack_tmpdir=$(mktemp -d)
+    cd $buildpack_tmpdir && git clone $APT_BUILDPACK .
 
-	local build_tmpdir=$(mktemp -d)
-	mkdir -p $build_tmpdir
+    local build_tmpdir=$(mktemp -d)
+    mkdir -p $build_tmpdir
 
-	SUPPORTED_BROWSERS=${PLAYWRIGHT_BUILDPACK_BROWSERS:-chromium,firefox,webkit}
-	echo "Installing Playwright dependencies (env: PLAYWRIGHT_BUILDPACK_BROWSERS) for $SUPPORTED_BROWSERS."
+    SUPPORTED_BROWSERS=${PLAYWRIGHT_BUILDPACK_BROWSERS:-chromium,firefox,webkit}
+    echo "Installing Playwright dependencies (env: PLAYWRIGHT_BUILDPACK_BROWSERS) for $SUPPORTED_BROWSERS."
 
-	if [[ "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
-		cat << EOF >>$build_tmpdir/Aptfile
+    if [[ "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
+        cat << EOF >>$build_tmpdir/Aptfile
 # Chromium dependencies
 libnspr4
 libnss3
@@ -44,10 +44,10 @@ libxrandr2
 libatspi2.0-0
 libxshmfence-dev
 EOF
-	fi
+    fi
 
-	if [[ "$SUPPORTED_BROWSERS" == *"firefox"* ]]; then
-		cat << EOF >>$build_tmpdir/Aptfile
+    if [[ "$SUPPORTED_BROWSERS" == *"firefox"* ]]; then
+        cat << EOF >>$build_tmpdir/Aptfile
 # Firefox dependencies
 libdbus-glib-1-2
 libxt6
@@ -57,10 +57,10 @@ libx11-xcb1
 libxcursor1
 libxi6
 EOF
-	fi
+    fi
 
-	if [[ "$SUPPORTED_BROWSERS" == *"firefox"* || "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
-		cat << EOF >>$build_tmpdir/Aptfile
+    if [[ "$SUPPORTED_BROWSERS" == *"firefox"* || "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
+        cat << EOF >>$build_tmpdir/Aptfile
 # Needed by Firefox and Chromium
 libgdk-pixbuf2.0-0
 libcairo-gobject2
@@ -72,55 +72,55 @@ libxdamage1
 libxfixes3
 libgtk-3-0
 EOF
-	fi
+    fi
 
-	case "$STACK" in
-	  "heroku-18")
-	    cat << EOF >>$build_tmpdir/Aptfile
+    case "$STACK" in
+      "heroku-18")
+        cat << EOF >>$build_tmpdir/Aptfile
 libvpx5
 EOF
-	    ;;
-	  "heroku-20")
-	    cat << EOF >>$build_tmpdir/Aptfile
+        ;;
+      "heroku-20")
+        cat << EOF >>$build_tmpdir/Aptfile
 libvpx6
 EOF
-	    ;;
-		"heroku-22")
-	    cat << EOF >>$build_tmpdir/Aptfile
+        ;;
+        "heroku-22")
+        cat << EOF >>$build_tmpdir/Aptfile
 libvpx7
 EOF
-	    ;;
-	  *)
-	    error "STACK must be 'heroku-18', 'heroku-20', or 'heroku-22'"
-	esac
+        ;;
+      *)
+        error "STACK must be 'heroku-18', 'heroku-20', or 'heroku-22'"
+    esac
 
-	local cache_tmpdir=$(mktemp -d)
+    local cache_tmpdir=$(mktemp -d)
 
-	HOME=/app $buildpack_tmpdir/bin/compile $build_tmpdir $cache_tmpdir
-	if [ $? -ne 0 ]; then
-		rm -rf $buildpack_tmpdir $build_tmpdir $cache_tmpdir
-		error "Could not install dependencies"
-	fi
-	mv $build_tmpdir/.apt $BUILD_DIR
-	# mv file in case user is using .profile.d
-	mkdir -p $BUILD_DIR/.profile.d/
-	mv $build_tmpdir/.profile.d/000_apt.sh $BUILD_DIR/.profile.d/
+    HOME=/app $buildpack_tmpdir/bin/compile $build_tmpdir $cache_tmpdir
+    if [ $? -ne 0 ]; then
+        rm -rf $buildpack_tmpdir $build_tmpdir $cache_tmpdir
+        error "Could not install dependencies"
+    fi
+    mv $build_tmpdir/.apt $BUILD_DIR
+    # mv file in case user is using .profile.d
+    mkdir -p $BUILD_DIR/.profile.d/
+    mv $build_tmpdir/.profile.d/000_apt.sh $BUILD_DIR/.profile.d/
 
-	rm -rf $buildpack_tmpdir $build_tmpdir $cache_tmpdir
+    rm -rf $buildpack_tmpdir $build_tmpdir $cache_tmpdir
 }
 
 configure_export_env() {
     topic "Writing profile script"
     mkdir -p $BUILD_DIR/.profile.d
     cat << EOF >$BUILD_DIR/.profile.d/001_playwright.sh
-export PLAYWRIGHT_BROWSERS_PATH=0
+export PLAYWRIGHT_BROWSERS_PATH=/app/.heroku/python/lib/python3.11/site-packages/playwright/driver/package/.local-browsers
 # They are not referenced correctly for ffmpeg
 export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/app/.apt/usr/lib/x86_64-linux-gnu/pulseaudio/:/app/.apt/lib/x86_64-linux-gnu/
 EOF
 
     # Give environment variable to other buildpacks
-    echo "export PLAYWRIGHT_BROWSERS_PATH=0" >> "$BP_DIR/export"
-    export PLAYWRIGHT_BROWSERS_PATH=0
+    echo "export PLAYWRIGHT_BROWSERS_PATH=/app/.heroku/python/lib/python3.11/site-packages/playwright/driver/package/.local-browsers" >> "$BP_DIR/export"
+    export PLAYWRIGHT_BROWSERS_PATH=/app/.heroku/python/lib/python3.11/site-packages/playwright/driver/package/.local-browsers
 }
 
 # See here as a reference: https://devcenter.heroku.com/articles/buildpack-api#bin-compile
@@ -178,7 +178,6 @@ install_chromium() {
         ls -l $PIP_TARGET/chromium
     )
 }
-
 
 export_env_dir "$ENV_DIR" PLAYWRIGHT_BUILDPACK_BROWSERS
 install_system_deps
