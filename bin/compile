@@ -155,7 +155,8 @@ install_chromium() {
         rm -rf $PIP_TARGET/chromium
         
         # Download and extract the specific version of Chromium
-        wget -qO- https://www.googleapis.com/download/storage/v1/b/chromium-browser-snapshots/o/Linux_x64%2F$CHROMIUM_VERSION%2Fchrome-linux.zip?alt=media | bsdtar -xvf- -C $PIP_TARGET
+        wget -qO chromium-linux.zip "https://www.googleapis.com/download/storage/v1/b/chromium-browser-snapshots/o/Linux_x64%2F$CHROMIUM_VERSION%2Fchrome-linux.zip?alt=media"
+        unzip chromium-linux.zip -d $PIP_TARGET
         
         # Verify installation
         if [ ! -d "$PIP_TARGET/chrome-linux" ]; then
