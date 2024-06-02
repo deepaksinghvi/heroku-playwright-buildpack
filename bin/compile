@@ -138,7 +138,7 @@ export_env_dir() {
 }
 
 install_chromium() {
-    topic "Installing Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
+    topic "Installing specific version of Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
     (
         cd $BUILD_DIR
         if [ -z "$PIP_TARGET" ]; then
@@ -147,10 +147,29 @@ install_chromium() {
             PIP_TARGET="$PIP_TARGET/playwright/driver/package/.local-browsers"
         fi
         export PLAYWRIGHT_BROWSERS_PATH=$PIP_TARGET
-        $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
+        
+        # Specify the desired Chromium version here
+        CHROMIUM_VERSION=856583  # Example version (change as needed)
+        
+        # Remove any existing browser directories to ensure clean installation
+        rm -rf $PIP_TARGET/chromium
+        
+        # Download and extract the specific version of Chromium
+        wget -qO chromium-linux.zip "https://www.googleapis.com/download/storage/v1/b/chromium-browser-snapshots/o/Linux_x64%2F$CHROMIUM_VERSION%2Fchrome-linux.zip?alt=media"
+        unzip chromium-linux.zip -d $PIP_TARGET
+        
+        # Verify installation
+        if [ ! -d "$PIP_TARGET/chrome-linux" ]; then
+            error "Failed to install Chromium version $CHROMIUM_VERSION"
+        else
+            mv $PIP_TARGET/chrome-linux $PIP_TARGET/chromium
+        fi
+        
+        # Debugging information
+        echo "Chromium binary installed at: $PIP_TARGET/chromium"
+        ls -l $PIP_TARGET/chromium
     )
 }
-
 
 
 export_env_dir "$ENV_DIR" PLAYWRIGHT_BUILDPACK_BROWSERS
