@@ -26,42 +26,19 @@ install_system_deps() {
     local build_tmpdir=$(mktemp -d)
     mkdir -p $build_tmpdir
 
-    SUPPORTED_BROWSERS=${PLAYWRIGHT_BUILDPACK_BROWSERS:-chromium,firefox,webkit}
-    echo "Installing Playwright dependencies (env: PLAYWRIGHT_BUILDPACK_BROWSERS) for $SUPPORTED_BROWSERS."
+    SUPPORTED_BROWSERS=${PLAYWRIGHT_BUILDPACK_BROWSERS:-chromium}
+    echo "Installing Playwright dependencies for $SUPPORTED_BROWSERS."
 
-    if [[ "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
-        cat << EOF >>$build_tmpdir/Aptfile
-# Chromium dependencies
-libnspr4
+    cat <<EOF >>$build_tmpdir/Aptfile
 libnss3
 libxss1
 libasound2
-fonts-noto-color-emoji
 libgbm1
 libatk-bridge2.0-0
 libxkbcommon0
 libxrandr2
 libatspi2.0-0
 libxshmfence-dev
-EOF
-    fi
-
-    if [[ "$SUPPORTED_BROWSERS" == *"firefox"* ]]; then
-        cat << EOF >>$build_tmpdir/Aptfile
-# Firefox dependencies
-libdbus-glib-1-2
-libxt6
-libsm6
-libice6
-libx11-xcb1
-libxcursor1
-libxi6
-EOF
-    fi
-
-    if [[ "$SUPPORTED_BROWSERS" == *"firefox"* || "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
-        cat << EOF >>$build_tmpdir/Aptfile
-# Needed by Firefox and Chromium
 libgdk-pixbuf2.0-0
 libcairo-gobject2
 libpulse0
@@ -71,8 +48,9 @@ libxcomposite1
 libxdamage1
 libxfixes3
 libgtk-3-0
+libnss3
+libgconf-2-4
 EOF
-    fi
 
     case "$STACK" in
       "heroku-18")
@@ -85,7 +63,7 @@ EOF
 libvpx6
 EOF
         ;;
-        "heroku-22")
+      "heroku-22")
         cat << EOF >>$build_tmpdir/Aptfile
 libvpx7
 EOF
@@ -102,43 +80,14 @@ EOF
         error "Could not install dependencies"
     fi
     mv $build_tmpdir/.apt $BUILD_DIR
-    # mv file in case user is using .profile.d
     mkdir -p $BUILD_DIR/.profile.d/
     mv $build_tmpdir/.profile.d/000_apt.sh $BUILD_DIR/.profile.d/
 
     rm -rf $buildpack_tmpdir $build_tmpdir $cache_tmpdir
 }
 
-configure_export_env() {
-    topic "Writing profile script"
-    mkdir -p $BUILD_DIR/.profile.d
-    cat << EOF >$BUILD_DIR/.profile.d/001_playwright.sh
-export PLAYWRIGHT_BROWSERS_PATH=/app/.heroku/python/lib/python3.11/site-packages/playwright/driver/package/.local-browsers
-# They are not referenced correctly for ffmpeg
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/app/.apt/usr/lib/x86_64-linux-gnu/pulseaudio/:/app/.apt/lib/x86_64-linux-gnu/
-EOF
-
-    # Give environment variable to other buildpacks
-    echo "export PLAYWRIGHT_BROWSERS_PATH=/app/.heroku/python/lib/python3.11/site-packages/playwright/driver/package/.local-browsers" >> "$BP_DIR/export"
-    export PLAYWRIGHT_BROWSERS_PATH=/app/.heroku/python/lib/python3.11/site-packages/playwright/driver/package/.local-browsers
-}
-
-# See here as a reference: https://devcenter.heroku.com/articles/buildpack-api#bin-compile
-export_env_dir() {
-  env_dir=$1
-  acceptlist_regex=${2:-''}
-  denylist_regex=${3:-'^(PATH|GIT_DIR|CPATH|CPPATH|LD_PRELOAD|LIBRARY_PATH)$'}
-  if [ -d "$env_dir" ]; then
-    for e in $(ls $env_dir); do
-      echo "$e" | grep -E "$acceptlist_regex" | grep -qvE "$denylist_regex" &&
-      export "$e=$(cat $env_dir/$e)"
-      :
-    done
-  fi
-}
-
 install_chromium() {
-    topic "Installing specific version of Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
+    topic "Installing Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
     (
         cd $BUILD_DIR
         if [ -z "$PIP_TARGET" ]; then
@@ -147,58 +96,15 @@ install_chromium() {
             PIP_TARGET="$PIP_TARGET/playwright/driver/package/.local-browsers"
         fi
         export PLAYWRIGHT_BROWSERS_PATH=$PIP_TARGET
-        
-        # Specify the desired Chromium version here
-        CHROMIUM_VERSION=856583  # Example version (change as needed)
-        
-        # Remove any existing browser directories to ensure clean installation
-        rm -rf $PIP_TARGET/chromium
-        
-        # Download and extract the specific version of Chromium
-        wget -qO chromium-linux.zip "https://www.googleapis.com/download/storage/v1/b/chromium-browser-snapshots/o/Linux_x64%2F$CHROMIUM_VERSION%2Fchrome-linux.zip?alt=media"
-        unzip chromium-linux.zip -d $PIP_TARGET
-        
-        # Remove the original zip file to minimize slug size
-        rm -f chromium-linux.zip
-        
-        # Move and rename the directory to match the expected structure
-        mv $PIP_TARGET/chrome-linux $PIP_TARGET/chromium
-        
-        # Clean up unnecessary files to reduce slug size
-        find $PIP_TARGET/chromium -type f ! -name 'chrome' -delete
-        find $PIP_TARGET/chromium -type d -empty -delete
-        
-        # Verify installation
-        if [ ! -f "$PIP_TARGET/chromium/chrome" ]; then
-            error "Failed to install Chromium version $CHROMIUM_VERSION"
-        fi
-        
-        # Debugging information
-        echo "Chromium binary installed at: $PIP_TARGET/chromium"
-        ls -l $PIP_TARGET/chromium
+        mkdir -p $PIP_TARGET/chromium
+        curl -SL https://commondatastorage.googleapis.com/chromium-browser-snapshots/Linux_x64/1129/chrome-linux.zip -o chrome-linux.zip
+        unzip chrome-linux.zip -d $PIP_TARGET/chromium/
+        rm chrome-linux.zip
+        mv $PIP_TARGET/chromium/chrome-linux/* $PIP_TARGET/chromium/
+        rm -rf $PIP_TARGET/chromium/chrome-linux
     )
-}
-
-verify_playwright_setup() {
-    topic "Verifying Playwright setup"
-    if [ -z "$PLAYWRIGHT_BROWSERS_PATH" ]; then
-        error "PLAYWRIGHT_BROWSERS_PATH is not set"
-    fi
-
-    if [ ! -d "$PLAYWRIGHT_BROWSERS_PATH/chromium" ]; then
-        error "Chromium directory does not exist at $PLAYWRIGHT_BROWSERS_PATH/chromium"
-    fi
-
-    if [ ! -f "$PLAYWRIGHT_BROWSERS_PATH/chromium/chrome" ]; then
-        error "Chromium executable does not exist at $PLAYWRIGHT_BROWSERS_PATH/chromium/chrome"
-    fi
-
-    echo "PLAYWRIGHT_BROWSERS_PATH is set to $PLAYWRIGHT_BROWSERS_PATH"
-    echo "Chromium is installed and executable found at $PLAYWRIGHT_BROWSERS_PATH/chromium/chrome"
 }
 
 export_env_dir "$ENV_DIR" PLAYWRIGHT_BUILDPACK_BROWSERS
 install_system_deps
-configure_export_env
 install_chromium
-verify_playwright_setup
