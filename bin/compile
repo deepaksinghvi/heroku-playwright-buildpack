@@ -179,7 +179,26 @@ install_chromium() {
     )
 }
 
+verify_playwright_setup() {
+    topic "Verifying Playwright setup"
+    if [ -z "$PLAYWRIGHT_BROWSERS_PATH" ]; then
+        error "PLAYWRIGHT_BROWSERS_PATH is not set"
+    fi
+
+    if [ ! -d "$PLAYWRIGHT_BROWSERS_PATH/chromium" ]; then
+        error "Chromium directory does not exist at $PLAYWRIGHT_BROWSERS_PATH/chromium"
+    fi
+
+    if [ ! -f "$PLAYWRIGHT_BROWSERS_PATH/chromium/chrome" ]; then
+        error "Chromium executable does not exist at $PLAYWRIGHT_BROWSERS_PATH/chromium/chrome"
+    fi
+
+    echo "PLAYWRIGHT_BROWSERS_PATH is set to $PLAYWRIGHT_BROWSERS_PATH"
+    echo "Chromium is installed and executable found at $PLAYWRIGHT_BROWSERS_PATH/chromium/chrome"
+}
+
 export_env_dir "$ENV_DIR" PLAYWRIGHT_BUILDPACK_BROWSERS
 install_system_deps
 configure_export_env
 install_chromium
+verify_playwright_setup
