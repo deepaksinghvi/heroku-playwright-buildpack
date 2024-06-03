@@ -87,19 +87,19 @@ EOF
     rm -rf $buildpack_tmpdir $build_tmpdir $cache_tmpdir
 }
 
-configure_export_env() {
-    topic "Writing profile script"
-    mkdir -p $BUILD_DIR/.profile.d
-    cat << EOF >$BUILD_DIR/.profile.d/001_playwright.sh
-export PLAYWRIGHT_BROWSERS_PATH=0
+#configure_export_env() {
+#    topic "Writing profile script"
+#    mkdir -p $BUILD_DIR/.profile.d
+#    cat << EOF >$BUILD_DIR/.profile.d/001_playwright.sh
+#export PLAYWRIGHT_BROWSERS_PATH=0
 # They are not referenced correctly for ffmpeg
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/app/.apt/usr/lib/x86_64-linux-gnu/pulseaudio/:/app/.apt/lib/x86_64-linux-gnu/
-EOF
-
-    # Give environment variable to other buildpacks
-    echo "export PLAYWRIGHT_BROWSERS_PATH=0" >> "$BP_DIR/export"
-    export PLAYWRIGHT_BROWSERS_PATH=0
-}
+#export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/app/.apt/usr/lib/x86_64-linux-gnu/pulseaudio/:/app/.apt/lib/x86_64-linux-gnu/
+#EOF
+#
+#    # Give environment variable to other buildpacks
+#    echo "export PLAYWRIGHT_BROWSERS_PATH=0" >> "$BP_DIR/export"
+#    export PLAYWRIGHT_BROWSERS_PATH=0
+#}
 
 # See here as a reference: https://devcenter.heroku.com/articles/buildpack-api#bin-compile
 export_env_dir() {
