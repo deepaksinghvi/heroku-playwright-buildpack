@@ -71,8 +71,26 @@ libxcomposite1
 libxdamage1
 libxfixes3
 libgtk-3-0
+libdrm2
+libxrandr2
 EOF
 	fi
+
+	# Adding missing dependencies mentioned in the error message
+	cat << EOF >>$build_tmpdir/Aptfile
+# Additional dependencies
+libatk1.0-0
+libatk-bridge2.0-0
+libdrm2
+libatspi2.0-0
+libxcomposite1
+libxdamage1
+libxfixes3
+libxrandr2
+libgbm1
+libxkbcommon0
+libasound2
+EOF
 
 	case "$STACK" in
 	  "heroku-18")
