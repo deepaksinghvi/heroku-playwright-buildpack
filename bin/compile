@@ -148,7 +148,6 @@ install_chromium() {
         fi
         export PLAYWRIGHT_BROWSERS_PATH=$PIP_TARGET
         $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
-        $BUILD_DIR/.heroku/python/bin/python -m playwright install-deps
     )
 }
 
