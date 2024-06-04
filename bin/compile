@@ -17,20 +17,24 @@ topic() {
 }
 
 install_system_deps() {
-	topic "Installing System Dependencies"
+    topic "Installing System Dependencies"
 
-	APT_BUILDPACK="https://github.com/heroku/heroku-buildpack-apt"
-	local buildpack_tmpdir=$(mktemp -d)
-	cd $buildpack_tmpdir && git clone $APT_BUILDPACK .
+    echo "Cloning APT buildpack..."
+    APT_BUILDPACK="https://github.com/heroku/heroku-buildpack-apt"
+    local buildpack_tmpdir=$(mktemp -d)
+    cd $buildpack_tmpdir && git clone $APT_BUILDPACK .
 
-	local build_tmpdir=$(mktemp -d)
-	mkdir -p $build_tmpdir
+    echo "Creating build temp dir..."
+    local build_tmpdir=$(mktemp -d)
+    mkdir -p $build_tmpdir
 
-	SUPPORTED_BROWSERS=${PLAYWRIGHT_BUILDPACK_BROWSERS:-chromium,firefox,webkit}
-	echo "Installing Playwright dependencies (env: PLAYWRIGHT_BUILDPACK_BROWSERS) for $SUPPORTED_BROWSERS."
+    echo "Setting up supported browsers..."
+    SUPPORTED_BROWSERS=${PLAYWRIGHT_BUILDPACK_BROWSERS:-chromium,firefox,webkit}
+    echo "Installing Playwright dependencies (env: PLAYWRIGHT_BUILDPACK_BROWSERS) for $SUPPORTED_BROWSERS."
 
-	if [[ "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
-		cat << EOF >>$build_tmpdir/Aptfile
+    if [[ "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
+        echo "Adding Chromium dependencies to Aptfile..."
+        cat << EOF >>$build_tmpdir/Aptfile
 # Chromium dependencies
 libnspr4
 libnss3
@@ -44,7 +48,7 @@ libxrandr2
 libatspi2.0-0
 libxshmfence-dev
 EOF
-	fi
+    fi
 
 	if [[ "$SUPPORTED_BROWSERS" == *"firefox"* ]]; then
 		cat << EOF >>$build_tmpdir/Aptfile
