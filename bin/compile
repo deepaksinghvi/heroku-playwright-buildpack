@@ -167,4 +167,3 @@ install_chromium
 
 echo "Verifying installed libraries..."
 echo $LD_LIBRARY_PATH
-ls -l /app/.apt/usr/lib/x86_64-linux-gnu | grep libatk-bridge
