@@ -5,6 +5,7 @@ set -e
 BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
+PLAYWRIGHT_BROWSERS_PATH=$BUILD_DIR/pw-browsers
 BP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 error() {
@@ -150,15 +151,6 @@ export_env_dir() {
 install_chromium() {
     topic "Installing Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
     (
-        cd $BUILD_DIR
-        ls $BUILD_DIR
-        which python
-        if [ -z "$PIP_TARGET" ]; then
-            PIP_TARGET=$($BUILD_DIR/.heroku/python/bin/python -c 'import sysconfig, os; print(os.path.join(sysconfig.get_path("purelib"), "playwright/driver/package/.local-browsers"))')
-        else
-            PIP_TARGET="$PIP_TARGET/playwright/driver/package/.local-browsers"
-        fi
-        export PLAYWRIGHT_BROWSERS_PATH=$PIP_TARGET
         $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
     )
 }
