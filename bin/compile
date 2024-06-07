@@ -5,7 +5,7 @@ set -e
 BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
-PLAYWRIGHT_BROWSERS_PATH=$BUILD_DIR/pw-browsers
+PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers
 PLAYWRIGHT_BUILDPACK_BROWSERS=chromium
 BP_DIR=`cd $(dirname $0); cd ..; pwd`
 
@@ -152,7 +152,7 @@ export_env_dir() {
 install_chromium() {
     topic "Installing Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
     (
-        $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
+        /app/.heroku/python/bin/python -m playwright install chromium
     )
 }
 
