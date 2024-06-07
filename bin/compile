@@ -152,7 +152,7 @@ export_env_dir() {
 install_chromium() {
     topic "Installing Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
     (
-        /usr/bin/python -m playwright install chromium
+        $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
     )
 }
 
