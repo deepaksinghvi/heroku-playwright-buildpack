@@ -152,7 +152,6 @@ install_chromium() {
         cd $BUILD_DIR
         ls $BUILD_DIR
         which python
-        ls $BUILD_DIR/.heroku
         if [ -z "$PIP_TARGET" ]; then
             PIP_TARGET=$(/usr/bin/python -c 'import sysconfig, os; print(os.path.join(sysconfig.get_path("purelib"), "playwright/driver/package/.local-browsers"))')
         else
