@@ -150,6 +150,9 @@ install_chromium() {
     topic "Installing Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
     (
         cd $BUILD_DIR
+        ls $BUILD_DIR
+        which python
+        ls $BUILD_DIR/.heroku
         if [ -z "$PIP_TARGET" ]; then
             PIP_TARGET=$(/app/.heroku/python/bin/python -c 'import sysconfig, os; print(os.path.join(sysconfig.get_path("purelib"), "playwright/driver/package/.local-browsers"))')
         else
