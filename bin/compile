@@ -5,8 +5,6 @@ set -e
 BUILD_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
-PLAYWRIGHT_BROWSERS_PATH=/app/pw-browsers
-PLAYWRIGHT_BUILDPACK_BROWSERS=chromium
 BP_DIR=`cd $(dirname $0); cd ..; pwd`
 
 error() {
@@ -31,8 +29,8 @@ install_system_deps() {
     mkdir -p $build_tmpdir
 
     echo "Setting up supported browsers..."
-#    SUPPORTED_BROWSERS=${PLAYWRIGHT_BUILDPACK_BROWSERS:-chromium,firefox,webkit}
-#    echo "Installing Playwright dependencies (env: PLAYWRIGHT_BUILDPACK_BROWSERS) for $SUPPORTED_BROWSERS."
+    SUPPORTED_BROWSERS=${PLAYWRIGHT_BUILDPACK_BROWSERS:-chromium,firefox,webkit}
+    echo "Installing Playwright dependencies (env: PLAYWRIGHT_BUILDPACK_BROWSERS) for $SUPPORTED_BROWSERS."
 
     if [[ "$SUPPORTED_BROWSERS" == *"chromium"* ]]; then
         echo "Adding Chromium dependencies to Aptfile..."
@@ -79,7 +77,6 @@ libxcomposite1
 libxdamage1
 libxfixes3
 libgtk-3-0
-playwright
 EOF
     fi
 
@@ -125,13 +122,13 @@ configure_export_env() {
     topic "Writing profile script"
     mkdir -p $BUILD_DIR/.profile.d
     cat << EOF >$BUILD_DIR/.profile.d/001_playwright.sh
-export PLAYWRIGHT_BROWSERS_PATH=$BUILD_DIR/pw-browsers
+export PLAYWRIGHT_BROWSERS_PATH=0
 export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/app/.apt/usr/lib/x86_64-linux-gnu:/app/.apt/lib/x86_64-linux-gnu:/app/.apt/usr/lib/x86_64-linux-gnu/pulseaudio/
 EOF
 
     # Give environment variable to other buildpacks
-    echo "export PLAYWRIGHT_BROWSERS_PATH=$BUILD_DIR/pw-browsers" >> "$BP_DIR/export"
-    export PLAYWRIGHT_BROWSERS_PATH=$BUILD_DIR/pw-browsers
+    echo "export PLAYWRIGHT_BROWSERS_PATH=0" >> "$BP_DIR/export"
+    export PLAYWRIGHT_BROWSERS_PATH=0
     echo "export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:/app/.apt/usr/lib/x86_64-linux-gnu:/app/.apt/lib/x86_64-linux-gnu:/app/.apt/usr/lib/x86_64-linux-gnu/pulseaudio/" >> "$BP_DIR/export"
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/app/.apt/usr/lib/x86_64-linux-gnu:/app/.apt/lib/x86_64-linux-gnu:/app/.apt/usr/lib/x86_64-linux-gnu/pulseaudio/
 }
@@ -152,7 +149,14 @@ export_env_dir() {
 install_chromium() {
     topic "Installing Chromium browser binary for Playwright and Updating PLAYWRIGHT_BROWSERS_PATH"
     (
-        /app/.heroku/python/bin/python -m playwright install chromium
+        cd $BUILD_DIR
+        if [ -z "$PIP_TARGET" ]; then
+            PIP_TARGET=$($BUILD_DIR/.heroku/python/bin/python -c 'import sysconfig, os; print(os.path.join(sysconfig.get_path("purelib"), "playwright/driver/package/.local-browsers"))')
+        else
+            PIP_TARGET="$PIP_TARGET/playwright/driver/package/.local-browsers"
+        fi
+        export PLAYWRIGHT_BROWSERS_PATH=$PIP_TARGET
+        $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
     )
 }
 
