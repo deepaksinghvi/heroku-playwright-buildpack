@@ -154,12 +154,12 @@ install_chromium() {
         ls $BUILD_DIR
         which python
         if [ -z "$PIP_TARGET" ]; then
-            PIP_TARGET=$(/usr/bin/python -c 'import sysconfig, os; print(os.path.join(sysconfig.get_path("purelib"), "playwright/driver/package/.local-browsers"))')
+            PIP_TARGET=$($BUILD_DIR/.heroku/python/bin/python -c 'import sysconfig, os; print(os.path.join(sysconfig.get_path("purelib"), "playwright/driver/package/.local-browsers"))')
         else
             PIP_TARGET="$PIP_TARGET/playwright/driver/package/.local-browsers"
         fi
         export PLAYWRIGHT_BROWSERS_PATH=$PIP_TARGET
-        /usr/bin/python -m playwright install chromium
+        $BUILD_DIR/.heroku/python/bin/python -m playwright install chromium
     )
 }
 
